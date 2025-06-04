@@ -2,6 +2,7 @@ import streamlit as st
 import os
 import pandas as pd
 import json
+from PIL import Image, ImageDraw, ImageFont
 # streamlit run 4_streamlit_view.py
 # Define the root directory where figures are stored
 
@@ -140,7 +141,25 @@ else:
         # if figure exists, display it
         if os.path.exists(figure_path):
             st.subheader(plot_type["name"].capitalize())
-            st.image(figure_path, caption=figure_file, use_column_width=True)
+            text_key = f"text_{plot_type['name']}_{figure_file}"
+            user_text = st.text_input(
+                "Add text to figure (leave blank for none)",
+                key=text_key,
+            )
+            if user_text:
+                image = Image.open(figure_path).convert("RGBA")
+                draw = ImageDraw.Draw(image)
+                font = ImageFont.load_default()
+                text_width, text_height = draw.textsize(user_text, font=font)
+                margin = 5
+                draw.rectangle(
+                    [0, 0, text_width + 2 * margin, text_height + 2 * margin],
+                    fill=(255, 255, 255, 200),
+                )
+                draw.text((margin, margin), user_text, fill="black", font=font)
+                st.image(image, caption=figure_file, use_column_width=True)
+            else:
+                st.image(figure_path, caption=figure_file, use_column_width=True)
             figures_found = True
     
     if not figures_found:
